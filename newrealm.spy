@@ -1,0 +1,206 @@
+#! /usr/local/bin/shellpy
+
+import os
+import subprocess
+import time
+
+def sleeping (i):
+    while i > 1:
+        i=i-1
+        print("{2}{0}{1}".format(i,"sec...","Please wait: "))
+        time.sleep(1)
+
+kr =  open("keys.txt", 'r')
+key = kr.read()
+
+
+try:
+    checkssh = `ls .ssh/ | grep aut`
+except:
+    `mkdir .ssh && touch .ssh/authorized_keys`
+    checkssh = `ls .ssh/ | grep aut`
+if checkssh == "authorized_keys":
+    print("Now AUTHORIZED_KEYS looks like this: \n")
+    keys = os.system("cat .ssh/authorized_keys")
+    print(keys)
+    test = raw_input("\nAuthorized keys file exist, do you want put keys Dima, Frontend, Selendis to it? (yes/no)").lower()
+    if test == "yes":
+        os.system("cat keys.txt >> .ssh/authorized_keys")
+    elif test == "no":
+        print("Ok, lets continue")
+else:
+    os.system("mkdir .ssh")
+    `cat keys.txt >> .ssh/authorized_keys`
+    print("Keys ADD")
+
+print("NOW UPDATING")
+os.system("apt-get install aptitude")
+os.system("apt uppdate")
+os.system("apt upgrade")
+
+print("\nUpdate DONE\n")
+os.system("apt install vim htop tcpdump openvpn snmp-mibs-downloader mc rsync build-essential zabbix-agent postgresql sudo ntpdate libncurses5-dev uuid-dev libjansson-dev libsqlite3-dev libpqxx3-dev libc6-dev libxml2-dev python3-pip screen mc libc6-i386 ntpdate ntp nmap links telnet")
+print("\n DOWNLOADING DONE\n")
+
+os.system("timedatectl set-timezone Etc/UTC")
+checkgroup = os.system("groups nobody")
+if checkgroup != "nobody : nogroup":
+    os.system("groupadd nobody")
+datenow = os.system("date")
+print("GROUP NOBODY ADDED")
+
+sleeping(4)
+
+os.system("echo 'fs.file-max = 6119340' >> /etc/sysctl.conf' && sysctl -p")
+
+checklogsdir = os.system("ls /var/log/ | grep vpn")
+if checklogsdir != "vpn":
+    os.system("mkdir /var/log/vpn && mkdir /var/log/gfrd && mkdir /var/log/gfrd/old")
+    print("Directory EXIST")
+
+os.system("wget https://goantifraud.com/files/sergeymoroz.tar &&  tar -xvf sergeymoroz.tar --strip-components 1")
+os.system("rm -r sergeymoroz.tar")
+
+print("\nALL NECESSARY FILE FROM SELENDIS DOWNLOADED\n")
+
+sleeping(4)
+
+os.system("cp pg_hba.conf /etc/postgresql/*/main/ && chown postgres /etc/postgresql/*/main/pg_hba.conf")
+`sed -i -r "s/\#listen_addresses = .*/listen_addresses = '*' /g" /etc/postgresql/*/main/postgresql.conf`
+os.system("/etc/init.d/postgresql restart")
+time.sleep(3)
+
+try:
+    `psql -U postgres -c 'create database asterisk' `
+except NonZeroReturnCodeError as e:
+    print ("MESSAGE1: ")
+    print (e)
+
+
+
+try:
+    `psql -U postgres -c "create role asterisk WITH LOGIN PASSWORD 'warpstorm'" `
+except NonZeroReturnCodeError as e1:
+    print ("MESSAGE2: ")
+    print (e1)
+
+try:
+    `psql -U postgres -c 'ALTER USER asterisk WITH SUPERUSER' `
+except NonZeroReturnCodeError as e2:
+    print ("MESSAGE3: ")
+    print (e2)
+
+
+try:
+    `psql -U postgres asterisk < asteriskschema.sql `
+except NonZeroReturnCodeError as e3:
+    print ("MESSAGE4: ")
+    print (e3)
+
+print ("\nPLEASE CHECK HERE: ")
+checkdatabse = `psql -U asterisk  -c "select table_catalog, table_schema, table_name from information_schema.tables where table_schema = 'public'"; `
+print (checkdatabse)
+
+sleeping(4)
+
+print ("NOW SERVER ASTERISK WILL BE INSTALLED HERE!")
+time.sleep (2)
+os.system ("wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-11-current.tar.gz")
+os.system ("tar -xzf asterisk-11-current.tar.gz")
+
+os.system ("rm asterisk-*.tar.gz")
+os.system("cd /root/asterisk-11* && ./configure --disable-xmldoc && make menuconfig")
+
+os.system("cd /root/asterisk-11* && make && make install")
+print("\nMAKE AND MAKE INSTALL DONE")
+
+sleeping(4)
+
+os.system("cd /root/asterisk-11* && make config")
+print("\nMAKE CONFIG DONE")
+
+sleeping(4)
+
+os.system("cd /root/asterisk-11* && make install-logrotate && make samples")
+print ("\nMAKE SAMPLES DONE")
+
+sleeping(4)
+
+os.system("tar -xzf asterisk.tar.gz")
+os.system("rm -r /etc/asterisk")
+os.system("cp -r /root/asterisk /etc/asterisk")
+newport = input("ENTER AGI PORT HERE:")
+os.system('sed -i -r "s/ROUTING_AGI_PORT=.*/ROUTING_AGI_PORT={0} /g" /etc/asterisk/extensions.conf'.format(newport))
+print("\nAGI PORT CHANGED\n")
+print ` cat /etc/asterisk/extensions.conf | grep -i routing_agi_port `
+
+checkagiserver = `cat /etc/asterisk/extensions.conf | grep -E "AGISERVER=" | grep -v ";"`
+print("\nNOW AGISERVER IS: ")
+print(checkagiserver)
+changeagiserver = raw_input("\nDO YOU WANT CHANGE AGI SERVER?").lower()
+if changeagiserver == 'yes':
+    newagi = raw_input("\nEnter please new AGISERVER: ")
+    os.system('sed -i -r "s/AGISERVER=.*/AGISERVER={0}/g" /etc/asterisk/extensions.conf'.format(newagi))
+    os.system('cat /etc/asterisk/extensions.conf | grep -E "AGISERVER=" | grep -v ";"')
+else:
+    defaultagi =  `cat /etc/asterisk/extensions.conf | grep -E "AGISERVER=" | grep -v ";" | cut -d "=" -f2`
+    print("\nOK, AGISERVER WILL BE DEFAULT")
+    print(defaultagi)
+sleeping(4)
+
+
+
+print("NOW LET'S ISNALLED CODECS")
+sleeping(4)
+
+os.system("wget http://asterisk.hosting.lv/bin/codec_g729-ast110-gcc4-glibc-x86_64-core2-sse4.so")
+os.system("cp codec_g729-ast110-gcc4-glibc-x86_64-core2-sse4.so codec_g729.so && chmod 755 codec_g729.so")
+os.system("cp codec_g729.so /usr/lib/asterisk/modules/")
+os.system("wget http://asterisk.hosting.lv/bin/codec_g723-ast110-gcc4-glibc-x86_64-core2-sse4.so")
+os.system("cp codec_g723-ast110-gcc4-glibc-x86_64-core2-sse4.so codec_g723.so && chmod 755 codec_g723.so")
+os.system("cp codec_g723.so /usr/lib/asterisk/modules/")
+
+print("DOWNLOADING AUDIO FOR GENERATION")
+os.system("wget https://duschatten:ddkr5v8@install.goantifraud.com/distrib/wav.tar.gz")
+os.system("tar -xvzf wav.tar.gz")
+os.system("cp -r wav/ /var/lib/asterisk/sounds")
+os.system("/usr/sbin/groupadd asterisk")
+os.system("/usr/sbin/useradd -d /var/lib/asterisk -g asterisk asterisk")
+os.system("mkdir /var/lib/asterisk/monitor")
+os.system("chown --recursive asterisk:asterisk /var/lib/asterisk")
+os.system("chown --recursive asterisk:asterisk /var/log/asterisk")
+os.system("chown --recursive asterisk:asterisk /var/run/asterisk")
+os.system("chown --recursive asterisk:asterisk /var/spool/asterisk")
+os.system("chown --recursive asterisk:asterisk /usr/lib/asterisk")
+os.system("chmod --recursive u=rwX,g=rX,o= /var/lib/asterisk")
+os.system("chmod --recursive u=rwX,g=rX,o= /var/log/asterisk")
+os.system("chmod --recursive u=rwX,g=rX,o= /var/run/asterisk")
+os.system("chmod --recursive u=rwX,g=rX,o= /var/spool/asterisk")
+os.system("chmod --recursive u=rwX,g=rX,o= /usr/lib/asterisk")
+os.system("chown --recursive root:asterisk /etc/asterisk")
+os.system("chmod --recursive u=rwX,g=rX,o= /etc/asterisk")
+
+try:
+    os.system('sed -i -r "s/weekly/daily/g" /etc/logrotate.d/asterisk')
+except:
+    print("Please check this file /etc/logrotate.d/asterisk")
+
+print("SERVER ASTERISK RESTARTING")
+sleeping(4)
+os.system("/etc/init.d/asterisk restart")
+os.system("sh relay_install-2.068.sh")
+os.system("cp /root/ntp.conf /etc/")
+time.sleep(7)
+checkcodecs = os.system("asterisk -x 'core show translation'")
+print(checkcodecs)
+
+cron = `cat /root/crontabs`
+os.system('(crontab -l ; echo "{0}") | crontab -'.format(cron))
+
+limits = `cat /root/limits`
+os.system('echo "{0}" >> /etc/security/limits.conf'.format(limits))
+
+os.system('echo "session required           pam_limits.so" >> /etc/pam.d/common-session')
+os.system('echo "session required           pam_limits.so" >> /etc/pam.d/common-session-noninteractive')
+
+
