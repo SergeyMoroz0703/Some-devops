@@ -20,7 +20,7 @@ client = SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 try:
-    connection = psycopg2.connect(host='172.16.0.220', user='gofraud', password='kXLILCrAPp2yjEgH3xCp', database='main')
+    connection = psycopg2.connect(host='172.16.0.220', user='gofraud', password='password', database='main')
 except psycopg2.OperationalError.diag as e:
     print(e)
 C = connection.cursor()
